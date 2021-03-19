@@ -1,0 +1,8 @@
+{
+  "name": "jest-poc-ionic",
+  "app_id": "",
+  "type": "angular",
+  "integrations": {
+    "cordova": {}
+  }
+}
