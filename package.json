@@ -20,6 +20,11 @@
     "@angular/platform-browser-dynamic": "11.2.0",
     "@angular/router": "11.2.0",
     "@ionic/angular": "5.5.2",
+    "@ngrx/store": "11.0.1",
+    "@ngx-translate/core": "9.1.1",
+    "date-fns": "2.19.0",
+    "jest-extended": "0.11.5",
+    "lodash": "4.17.21",
     "rxjs": "6.6.0",
     "tslib": "2.0.0",
     "zone.js": "0.10.2"
