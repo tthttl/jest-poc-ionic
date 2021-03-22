@@ -1,50 +1,30 @@
-import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { TestBed } from '@angular/core/testing';
-import { provideMockActions } from '@ngrx/effects/testing';
-import { Action, Store } from '@ngrx/store';
-import { MockStore, provideMockStore } from '@ngrx/store/testing';
-import { Observable, of } from 'rxjs';
+import { Action } from '@ngrx/store';
+import { of, ReplaySubject } from 'rxjs';
 import {
   MultimedGetGeneralPractitionerAction,
   MultimedGetGeneralPractitionerFailedAction,
   MultimedGetGeneralPractitionerSuccessAction
 } from '../general-practioner/actions';
-import { GlobalErrorHandlerService } from '../general-practioner/global-error-handler.service';
-import { GlobalState } from '../general-practioner/global/state';
 import { CareProvider } from '../general-practioner/model';
-import { MultimedService } from '../general-practioner/multimed-service';
 import { GeneralPractitionerEffects } from './effects';
 
 describe('general-practitioner effects', () => {
-  let actions = new Observable<Action>();
-  let store: MockStore;
+  let actions: ReplaySubject<Action>;
+  let store: any;
   let multimedService: any;
   let errorHandler: any;
-  const initialState = {userId: '1234'};
 
   beforeEach(() => {
-    TestBed.configureTestingModule({
-      imports: [
-        HttpClientTestingModule
-      ],
-      providers: [
-        MultimedService,
-        GlobalErrorHandlerService,
-        provideMockStore({initialState}),
-        provideMockActions(() => actions)
-      ]
-    });
-
-    store = TestBed.inject(MockStore);
-    multimedService = TestBed.inject(MultimedService);
-    errorHandler = TestBed.inject(GlobalErrorHandlerService);
+    actions = new ReplaySubject<Action>(1);
+    store = jasmine.createSpyObj('store', ['select']);
+    multimedService = jasmine.createSpyObj('multimedService', ['getGeneralPractitioner']);
+    errorHandler = jasmine.createSpyObj('errorHandler', ['handleErrors']);
   });
 
   it('should not execute getGeneralPractitioner when unhandled action is dispatched', (done) => {
-    actions = of({type: 'ANY'});
-    store.setState({userId: '1234'});
+    actions.next({type: 'ANY'});
+    setupStore({userId: '1234'});
     const effect = createEffects();
-    console.log(effect);
     effect.getGeneralPractitioner.subscribe(() => done.fail());
     setTimeout(done, 100);
   });
@@ -54,7 +34,7 @@ describe('general-practitioner effects', () => {
     const expectedUserId = 1234;
     const expectedGeneralPractitioner = {name: 'TestGeneralPractitioner'} as CareProvider;
     setupAction(new MultimedGetGeneralPractitionerAction());
-    store.setState({userId: expectedUserId});
+    setupStore({userId: expectedUserId});
     setupMultimedService(expectedGeneralPractitioner);
     setupErrorHandler();
     const effect = createEffects();
@@ -70,7 +50,7 @@ describe('general-practitioner effects', () => {
    when ${MultimedGetGeneralPractitionerAction.name} is dispatched`, (done) => {
     const expectedUserId = 1234;
     setupAction(new MultimedGetGeneralPractitionerAction());
-    store.setState({userId: expectedUserId});
+    setupStore({userId: expectedUserId});
     setupMultimedServiceWithError();
     setupErrorHandler();
     const effect = createEffects();
@@ -83,7 +63,11 @@ describe('general-practitioner effects', () => {
   });
 
   function setupAction(action: Action) {
-    actions = of(action);
+    actions.next(action);
+  }
+
+  function setupStore(state: any) {
+    store.select.and.returnValue(of(state));
   }
 
   function setupMultimedService(body: any) {
@@ -99,6 +83,6 @@ describe('general-practitioner effects', () => {
   }
 
   function createEffects() {
-    return new GeneralPractitionerEffects(store as Store<GlobalState>, actions as any, multimedService, errorHandler);
+    return new GeneralPractitionerEffects(store, actions as any, multimedService, errorHandler);
   }
 });
